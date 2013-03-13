@@ -20,13 +20,13 @@ def nextMove(m, grid):
     deltaX = endX - startX
     if deltaX > 0:
         output += "RIGHT\n" * abs(deltaX)
-    else:
+    elif deltaX < 0:
         output += "LEFT\n" * abs(deltaX)
 
     deltaY = endY - startY
     if deltaY > 0:
         output += "DOWN\n" * abs(deltaY)
-    else:
+    elif deltaY < 0:
         output += "UP\n" * abs(deltaY)
 
     return output
