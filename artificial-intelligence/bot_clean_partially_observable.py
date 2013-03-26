@@ -1,32 +1,83 @@
 #!/bin/python
 import random
+import os.path
 
 class Node:
     def __init__(self, x=0, y=0):
         self.x = x
         self.y = y
 
-    def distTo(self, target):
+    def dist_to(self, target):
         return abs(target.x - self.x) + abs(target.y - self.y)
 
 def next_move(posx, posy, board):
+    n = len(board)
+
+    # read cleared nodes from the state file.
+    cleared_map = [([0] * n) for i in range(n)]
+    state_fname = "bot_clean_partially_observable.state"
+    if os.path.exists(state_fname):
+        state_f = open(state_fname)
+        for y, line in enumerate(state_f):
+            for x, state_char in enumerate(line):
+                if x >= n:
+                    continue
+
+                if state_char == "-":
+                    cleared_map[x][y] = 1
+                elif state_char == "d":
+                    cleared_map[x][y] = 2
+
     # the input x and y were reversed in Hackerrank puzzles.
     bot_node = Node(posy, posx)
 
     dirty_nodes = []
     fogged_nodes = []
-    for i in range(len(board)):
+    on_the_dirty_node = False
+    for i in range(n):
         for j in range(len(board[i])):
             node = Node(j, i)
-            if board[i][j] == "d":
+            if board[i][j] == "d" or cleared_map[j][i] == 2:
                 dirty_nodes.append(node)
-            elif board[i][j] == "o":
+
+                if node.dist_to(bot_node) == 0:
+                    cleared_map[j][i] = 1
+                    on_the_dirty_node = True
+                else:
+                    cleared_map[j][i] = 2
+
+            elif board[i][j] == "o" and cleared_map[j][i] != 1:
                 fogged_nodes.append(node)
+            elif board[i][j] == "-":
+                cleared_map[j][i] = 1
+
+    # save cleared nodes in the state file.
+    state_f = open(state_fname, "w")
+    lines = []
+    for y in range(n):
+        line = ""
+        for x in range(len(cleared_map[y])):
+            if cleared_map[x][y] == 1:
+                line += "-"
+            elif cleared_map[x][y] == 2:
+                line += "d"
+            else:
+                line += "o"
+
+        lines.append(line + "\n")
+
+    state_f.writelines(lines)
+    state_f.flush()
+    state_f.close()
+
+    if on_the_dirty_node:
+        print "CLEAN"
+        return
 
     # find the nearest dirty node.
     nearest_dirty_node = None
     for node in dirty_nodes:
-        if nearest_dirty_node is None or node.distTo(bot_node) < nearest_dirty_node.distTo(bot_node):
+        if nearest_dirty_node is None or node.dist_to(bot_node) < nearest_dirty_node.dist_to(bot_node):
             nearest_dirty_node = node
 
     if nearest_dirty_node is None:
@@ -50,17 +101,21 @@ def move_to_fog(bot_node, fogged_nodes):
             delta_x = node.x - bot_node.x
             delta_y = node.y - bot_node.y
 
-            if abs(delta_y) < search_scope:
+            if abs(delta_y) < 2:
                 if delta_x == search_scope:
                     weights[1] += 1 # right
                 elif delta_x == -search_scope:
                     weights[0] += 1 # left
             
-            if abs(delta_x) < search_scope:
+            if abs(delta_x) < 2:
                 if delta_y == search_scope:
                     weights[3] += 1 # down
                 elif delta_y == -search_scope:
                     weights[2] += 1 # up
+
+        if sum(weights) == 0:
+            search_scope += 1
+            continue
 
         idx = weights.index(max(weights))
         temp_directions = []
@@ -88,8 +143,6 @@ def move_to_node(delta_x, delta_y):
         print "UP"
     elif delta_y > 0 :
         print "DOWN"
-    else:
-        print "CLEAN"
 
 # Tail starts here
 if __name__ == "__main__":
