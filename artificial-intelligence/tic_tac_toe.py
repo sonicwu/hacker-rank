@@ -20,24 +20,26 @@ class Line:
             else:
                 friendly_num += 1
 
+        weight = 0
         # "_XX" or "OO_", will WIN or LOSE.
         if enemy_num == 2 or friendly_num == 2:
-            return 10000
-
-        if enemy_num == 0:
+            weight = 10000
+        elif enemy_num == 0:
             # "__O", CHECKMATE!
             if friendly_num == 1:
-                return 1000
+                weight = 1000
             else: # "___", line is empty, ATTACK!
-                return 5
-
-        if friendly_num == 0:
+                weight = 5
+        elif friendly_num == 0:
             # "__X", DEFEND!
             if enemy_num == 1:
-                return 2
+                weight = 2
 
-        # "_OX", NULL.
-        return 0
+        # corner offset.
+        if self.neighbor_a.is_center_point() or self.neighbor_b.is_center_point():
+            weight *= 2
+
+        return weight
 
 class Node:
     def __init__(self, x=0, y=0, is_enemy=None):
@@ -48,6 +50,9 @@ class Node:
 
     def __str__(self):
         return "Node[{0}, {1}] Weight:{2}".format(self.x, self.y, self.total_weight)
+
+    def is_center_point(self):
+        return self.x == self.y == 1
 
 # Complete the function below to print 2 integers separated by a single space which will be your next move 
 def next_move(player, board):
