@@ -39,6 +39,11 @@ Solutions to HackerRank.com programming puzzle.
   <td>54.10</td>
   <td>56.20</td>
 </tr>
+<tr>
+  <td>AI - Tic tac toe</td>
+  <td>58.92</td>
+  <td>65.46</td>
+</tr>
 </table>
 
-Last updated: _29th March 2013_
+Last updated: _5th May 2013_
